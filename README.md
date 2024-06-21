@@ -7,7 +7,7 @@ Primero, clona este repositorio en tu máquina local utilizando el siguiente com
 
 bash
 
-git clone https://github.com/tu-usuario/tu-repositorio.git
+git clone https://github.com/MaxwellMza/Ta_te_ti
 2. Instalar Librerías Necesarias
 A continuación, instala las librerías necesarias ejecutando el siguiente comando en la terminal:
 
