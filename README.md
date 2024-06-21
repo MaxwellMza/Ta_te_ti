@@ -8,12 +8,15 @@ Primero, clona este repositorio en tu máquina local utilizando el siguiente com
 bash
 
 git clone https://github.com/MaxwellMza/Ta_te_ti
+
 2. Instalar Librerías Necesarias
 A continuación, instala las librerías necesarias ejecutando el siguiente comando en la terminal:
 
 bash
 
 pip install tqdm numpy tensorflow
+
+
 3. Ejecutar el Proyecto
 Abre una terminal en la ubicación del archivo y ejecuta el siguiente comando:
 
