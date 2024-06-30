@@ -1,6 +1,6 @@
 import os
 import time
-from tqdm import tqdm  # Librería para mostrar barras de progreso
+from tqdm import tqdm
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import numpy as np
@@ -10,7 +10,6 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 
-# Funciones auxiliares para el juego
 def check_winner(board):
     lines = [
         [board[0], board[1], board[2]],
@@ -33,20 +32,20 @@ def is_draw(board):
 def get_available_moves(board):
     return [i for i, spot in enumerate(board) if spot == '']
 
-def minimax(board, is_maximizing):
+def minimax(board, is_maximizing, depth):
     winner = check_winner(board)
     if winner == 'X':
-        return -1
+        return -10 + depth
     elif winner == 'O':
-        return 1
+        return 10 - depth
     elif is_draw(board):
-        return 0
+        return 0 - depth
 
     if is_maximizing:
         best_score = -float('inf')
         for move in get_available_moves(board):
             board[move] = 'O'
-            score = minimax(board, False)
+            score = minimax(board, False, depth + 1)
             board[move] = ''
             best_score = max(score, best_score)
         return best_score
@@ -54,7 +53,7 @@ def minimax(board, is_maximizing):
         best_score = float('inf')
         for move in get_available_moves(board):
             board[move] = 'X'
-            score = minimax(board, True)
+            score = minimax(board, True, depth + 1)
             board[move] = ''
             best_score = min(score, best_score)
         return best_score
@@ -64,14 +63,13 @@ def find_best_move(board):
     best_score = -float('inf')
     for move in get_available_moves(board):
         board[move] = 'O'
-        score = minimax(board, False)
+        score = minimax(board, False, 0)
         board[move] = ''
         if score > best_score:
             best_score = score
             best_move = move
     return best_move
 
-# Generar datos de entrenamiento
 def generate_training_data(num_samples):
     training_data = []
     for _ in tqdm(range(num_samples), desc="Generando datos de entrenamiento"):
@@ -91,7 +89,6 @@ def generate_training_data(num_samples):
                 break
     return training_data
 
-# Definir función para crear el modelo
 def create_model():
     model = Sequential([
         Dense(128, input_dim=9, activation='relu'),
@@ -101,7 +98,6 @@ def create_model():
     model.compile(optimizer=Adam(learning_rate=0.001), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
 
-# Cargar o entrenar el modelo
 if os.path.exists('ta_te_ti_model.h5'):
     print("Cargando modelo existente...")
     model = tf.keras.models.load_model('ta_te_ti_model.h5')
@@ -111,7 +107,6 @@ else:
     training_data = generate_training_data(10000)
     print("Datos de entrenamiento generados.")
 
-    # Preparar los datos de entrenamiento
     X = []
     y = []
 
@@ -122,13 +117,11 @@ else:
     X = np.array(X)
     y = np.array(y)
 
-    # Crear y entrenar el modelo
     model = create_model()
 
     print("Entrenando la IA, por favor espere...")
-    start_time = time.time()  # Inicio del temporizador
+    start_time = time.time()
 
-    # Añadir barra de progreso para el entrenamiento
     class TQDMCallback(tf.keras.callbacks.Callback):
         def __init__(self, epochs):
             self.epochs = epochs
@@ -140,25 +133,21 @@ else:
         def on_train_end(self, logs=None):
             self.tqdm_bar.close()
 
-    # Entrenar el modelo
     model.fit(X, y, epochs=10, callbacks=[TQDMCallback(10)])
-    end_time = time.time()  # Fin del temporizador
+    end_time = time.time()
     print(f"Entrenamiento completado en {end_time - start_time:.2f} segundos.")
 
-    # Guardar el modelo entrenado
     model.save('ta_te_ti_model.h5')
     print("Modelo guardado.")
 
-# Función para imprimir el tablero mejorada
 def print_board(board):
-    """Prints the Ta-Te-Ti board."""
     symbols = {
-        'X': '\033[1;31mX\033[m',  # Red color for 'X'
-        'O': '\033[1;34mO\033[m',  # Blue color for 'O'
-        '': ' '  # Empty spot
+        'X': '\033[1;31mX\033[m',
+        'O': '\033[1;34mO\033[m',
+        '': ' '
     }
     row_divider = '-----------'
-    os.system('cls' if os.name == 'nt' else 'clear')  # Limpiar pantalla
+    os.system('cls' if os.name == 'nt' else 'clear')
     for i in range(3):
         row = [symbols[board[3 * i + j]] for j in range(3)]
         print(' | '.join(row))
@@ -166,7 +155,6 @@ def print_board(board):
             print(row_divider)
     print()
 
-# Función para obtener el movimiento de la IA
 def get_ai_move(board):
     input_board = np.array([1 if spot == 'X' else -1 if spot == 'O' else 0 for spot in board]).reshape(1, -1)
     prediction = model.predict(input_board)
@@ -176,7 +164,6 @@ def get_ai_move(board):
         best_move = np.argmax(prediction)
     return best_move
 
-# Función para jugar un solo juego
 def play_single_game(starting_player):
     board = [''] * 9
     print_board(board)
@@ -184,15 +171,13 @@ def play_single_game(starting_player):
 
     while True:
         if current_player == 'human':
-            # Turno del jugador humano
-            human_move = int(input("Ingrese su movimiento (0-8): "))
+            human_move  = (int(input("Ingrese su movimiento (1-9): "))) - 1 
             if board[human_move] == '':
                 board[human_move] = 'X'
             else:
                 print("Movimiento inválido. Intente de nuevo.")
                 continue
         else:
-            # Turno de la IA
             ai_move = get_ai_move(board)
             board[ai_move] = 'O'
             print("IA mueve a:", ai_move)
@@ -202,23 +187,23 @@ def play_single_game(starting_player):
         if check_winner(board) or is_draw(board):
             break
 
-        # Alternar turno
         current_player = 'human' if current_player == 'ai' else 'ai'
 
     winner = check_winner(board)
-    return winner, current_player
+    return winner
 
-# Función para jugar varios juegos
 def play_game():
     human_wins = 0
     ai_wins = 0
     draws = 0
     total_games = 6
 
-    starting_player = random.choice(['human', 'ai'])  # Elegir aleatoriamente quién empieza primero
+    starting_players = ['human', 'ai'] * (total_games // 2)
 
-    while True:
-        winner, starting_player = play_single_game(starting_player)
+    for i in range(total_games):
+        print(f"\nJuego {i + 1}")
+        starting_player = starting_players[i]
+        winner = play_single_game(starting_player)
         if winner == 'X':
             human_wins += 1
         elif winner == 'O':
@@ -238,5 +223,4 @@ def play_game():
     else:
         print("El juego finalizó en empate.")
 
-# Jugar el juego
 play_game()
