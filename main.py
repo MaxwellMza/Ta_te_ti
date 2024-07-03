@@ -10,6 +10,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 
+# Función para comprobar si hay un ganador en el tablero
 def check_winner(board):
     lines = [
         [board[0], board[1], board[2]],
@@ -26,12 +27,15 @@ def check_winner(board):
             return line[0]
     return None
 
+# Función para comprobar si el juego terminó en empate
 def is_draw(board):
     return all([spot != '' for spot in board])
 
+# Función para obtener los movimientos disponibles en el tablero
 def get_available_moves(board):
     return [i for i, spot in enumerate(board) if spot == '']
 
+# Algoritmo Minimax para determinar la mejor jugada
 def minimax(board, is_maximizing, depth):
     winner = check_winner(board)
     if winner == 'X':
@@ -58,6 +62,7 @@ def minimax(board, is_maximizing, depth):
             best_score = min(score, best_score)
         return best_score
 
+# Función para encontrar la mejor jugada utilizando el algoritmo Minimax
 def find_best_move(board):
     best_move = None
     best_score = -float('inf')
@@ -70,6 +75,7 @@ def find_best_move(board):
             best_move = move
     return best_move
 
+# Función para generar datos de entrenamiento
 def generate_training_data(num_samples):
     training_data = []
     for _ in tqdm(range(num_samples), desc="Generando datos de entrenamiento"):
@@ -89,6 +95,7 @@ def generate_training_data(num_samples):
                 break
     return training_data
 
+# Función para crear el modelo de IA
 def create_model():
     model = Sequential([
         Dense(128, input_dim=9, activation='relu'),
@@ -98,13 +105,14 @@ def create_model():
     model.compile(optimizer=Adam(learning_rate=0.001), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
 
+# Verificar si existe un modelo guardado, si no, generar y entrenar uno nuevo
 if os.path.exists('ta_te_ti_model.h5'):
     print("Cargando modelo existente...")
     model = tf.keras.models.load_model('ta_te_ti_model.h5')
     print("Modelo cargado.")
 else:
     print("Generando datos de entrenamiento...")
-    training_data = generate_training_data(10000)
+    training_data = generate_training_data(100000)
     print("Datos de entrenamiento generados.")
 
     X = []
@@ -122,6 +130,7 @@ else:
     print("Entrenando la IA, por favor espere...")
     start_time = time.time()
 
+    # Callback para mostrar progreso del entrenamiento
     class TQDMCallback(tf.keras.callbacks.Callback):
         def __init__(self, epochs):
             self.epochs = epochs
@@ -140,6 +149,7 @@ else:
     model.save('ta_te_ti_model.h5')
     print("Modelo guardado.")
 
+# Función para imprimir el tablero
 def print_board(board):
     symbols = {
         'X': '\033[1;31mX\033[m',
@@ -155,6 +165,7 @@ def print_board(board):
             print(row_divider)
     print()
 
+# Función para obtener el movimiento de la IA utilizando el modelo entrenado
 def get_ai_move(board):
     input_board = np.array([1 if spot == 'X' else -1 if spot == 'O' else 0 for spot in board]).reshape(1, -1)
     prediction = model.predict(input_board)
@@ -164,6 +175,7 @@ def get_ai_move(board):
         best_move = np.argmax(prediction)
     return best_move
 
+# Función para jugar un solo juego
 def play_single_game(starting_player):
     board = [''] * 9
     print_board(board)
@@ -192,6 +204,7 @@ def play_single_game(starting_player):
     winner = check_winner(board)
     return winner
 
+# Función para jugar múltiples juegos y determinar el ganador final
 def play_game():
     human_wins = 0
     ai_wins = 0
@@ -223,4 +236,5 @@ def play_game():
     else:
         print("El juego finalizó en empate.")
 
+# Iniciar el juego
 play_game()
